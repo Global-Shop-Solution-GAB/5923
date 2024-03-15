@@ -1,0 +1,40 @@
+Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.Try
+V.Local.sSQL.Declare
+'TJS Mar 2020
+'Customer: U.S. Bolt
+'BUSINESS CASE:The company uses the company option 
+'?Block Charges until previous labor is closed? This 
+'works for most of their shop however, there are 2 
+'cases where this does not work. Right now they are 
+'manually flagging those labor steps in the ?Maintain 
+'WO Labor Sequence? screen. This is a cumbersome 
+'process that they are wanting to automate.
+
+F.ODBC.Connection!conts.OpenCompanyConnection
+
+F.Intrinsic.String.Build("Update JOB_OPERATIONS set ALLOW_CHRG = 'Y' where LMO = 'L' and RTRIM(PART) = 'CREW' and RTRIM(OPERATION) in ('CREW','DBUR')",,V.Local.sSQL)
+
+F.ODBC.Connection!conts.Execute(V.Local.sSQL)
+
+F.ODBC.Connection!conts.Close
+
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(Error,"SubRoutine",V.Ambient.CurrentSubroutine,"eNumber",V.Ambient.ErrorNumber,"eDescription",V.Ambient.ErrorDescription)
+F.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.Error.Start
+V.Local.sError.Declare
+V.Local.iRet.Declare
+V.Local.sSep.Declare
+
+F.Intrinsic.String.Build("-------------------------------------------------------------------------------------",,V.Local.sSep)
+F.Intrinsic.String.Build("({5}-{6}){0}{7}{0}Project: {4}{0}{7}{0}Sub: {1}{0}Error: {2}, {3}", V.Ambient.NewLine, V.Args.SubRoutine, V.Args.eNumber, V.Args.eDescription,V.Caller.ScriptFile,V.Ambient.Date, V.Ambient.Time,V.Local.sSep,V.Local.sError)
+F.Intrinsic.UI.Msgbox(V.Local.sError,"Error",V.Local.iRet)
+Program.Sub.Error.End
